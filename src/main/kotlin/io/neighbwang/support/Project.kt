@@ -11,37 +11,38 @@ import java.util.regex.Pattern
 /**
  * @author neighbWang
  */
-private const val BUILD_PATTEN = "(assemble|install|generate)(\\w+)(Release|Debug)"
+private val Project.startCommand
+    get() = gradle.startParameter.taskRequests.toString()
 
-internal fun Project.filterFlavors() = variantManager?.let { variantManager ->
-    gradle.startParameter.taskRequests.toString()
-        .let {
-            Pattern.compile(BUILD_PATTEN).matcher(it)
+internal val Project.buildType
+    get() = variantManager?.run {
+        buildTypes.keys.firstOrNull {
+            startCommand.contains(it, true)
+        }
+    }
+
+fun Project.filterFlavors(buildtype: String?) = variantManager?.let { variantManager ->
+    startCommand.toLowerCase().let {
+        Pattern.compile("(assemble|install|generate)(\\w+)$buildtype").matcher(it)
+    }.takeIf {
+        it.find()
+    }?.group(2)?.letCatching { flavor ->
+        variantManager.productFlavors.filter {
+            it.key.contains(flavor, true)
         }.takeIf {
-            it.find()
-        }?.group(2)?.toLowerCase()?.letCatching { flavor ->
-            println("==flavor is $flavor=====")
-            variantManager.productFlavors.filter {
-                it.key.contains(flavor, true)
-            }.takeIf {
-                it.isNotEmpty()
-            }?.let { result ->
-                variantManager.javaClass.getDeclaredField("productFlavors").apply {
-                    isAccessible = true
-                    this[variantManager] = result
-                }
+            it.isNotEmpty()
+        }?.let { result ->
+            variantManager.javaClass.getDeclaredField("productFlavors").apply {
+                isAccessible = true
+                this[variantManager] = result
             }
         }
+    }
 }
 
-internal fun Project.filterBuildTypes() = variantManager?.let { variantManager ->
-    val buildType = when {
-        gradle.startParameter.taskRequests.toString().contains("debug", true) -> "debug"
-        gradle.startParameter.taskRequests.toString().contains("release", true) -> "release"
-        else -> return@let
-    }
+internal fun Project.filterBuildTypes(buildtype: String?) = variantManager?.let { variantManager ->
     variantManager.buildTypes.filter {
-        it.key == buildType
+        it.key == buildtype
     }.takeIf {
         it.isNotEmpty()
     }?.letCatching {
@@ -56,7 +57,7 @@ internal fun Project.filterBuildTypes() = variantManager?.let { variantManager -
                 this[variantManager].takeIf {
                     it is TestedExtension
                 }?.let { extension ->
-                    (extension as TestedExtension).testBuildType = buildType
+                    (extension as TestedExtension).testBuildType = buildtype
                 }
             }
         }

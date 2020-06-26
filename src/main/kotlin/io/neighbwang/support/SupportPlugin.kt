@@ -13,12 +13,15 @@ class SupportPlugin : Plugin<Project> {
         val enableFilterTestScopes = "true" == project.properties["gradle.support.filter.tests.enable"]
         project.allprojects { subProject ->
             subProject.afterEvaluate {
+                val buildType by lazy {
+                    it.buildType
+                }
                 it.run {
                     if (enableFilterBuildTypes) {
-                        filterBuildTypes()
+                        filterBuildTypes(buildType)
                     }
-                    if (enableFilterFlavors){
-                        filterFlavors()
+                    if (enableFilterFlavors) {
+                        filterFlavors(buildType)
                     }
                     if (enableFilterTestScopes) {
                         filterTestScopes()

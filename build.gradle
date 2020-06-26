@@ -1,9 +1,12 @@
 plugins {
     id 'java'
+//    id 'signing'
     id 'org.jetbrains.kotlin.jvm' version '1.3.72'
+    id("io.codearte.nexus-staging") version "0.21.2"
+    id("de.marcphilipp.nexus-publish") version "0.4.0"
 }
 
-group 'io.neighbwang'
+group 'io.neighbwang.gradle'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -27,3 +30,98 @@ compileKotlin {
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
+
+javadoc {
+    failOnError = false
+}
+
+task packageJavadoc(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task packageSources(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives packageJavadoc, packageSources
+}
+
+test {
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+    }
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            username = OSSRH_USERNAME
+            password = OSSRH_PASSWORD
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = project.group
+            artifactId = project.name
+            version = project.version
+
+            from components.java
+
+            artifact project.packageSources {
+                classifier "sources"
+            }
+
+            artifact project.packageJavadoc {
+                classifier "javadoc"
+            }
+
+            pom {
+                name = project.name
+                url = 'https://github.com/neighbWang/agp-support-plugin'
+                description = project.description ?: project.name
+
+                scm {
+                    connection = 'scm:git:git://github.com/neighbWang/agp-support-plugin.git'
+                    developerConnection = 'scm:git:git@github.com:neighbWang/agp-support-plugin.git'
+                    url = 'https://github.com/neighbWang/agp-support-plugin'
+                }
+
+                licenses {
+                    license {
+                        name = 'Apache License'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0'
+                    }
+                }
+            }
+            pom.withXml { xml ->
+                (['git', 'log', '--format=%aN %aE'].execute() | ['sort', '-u'].execute()).with {
+                    waitForOrKill(5000)
+                    if (0 == exitValue()) {
+                        def developers = xml.asNode().appendNode('developers')
+                        text.eachLine { line ->
+                            def sp = line.lastIndexOf(' ')
+                            if (sp > 0) {
+                                def id = line.substring(0, sp).trim()
+                                def email = line.substring(sp + 1).trim()
+                                developers.appendNode('developer').with {
+                                    appendNode('id', id)
+                                    appendNode('email', email)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+//signing {
+//    sign publishing.publications.mavenJava
+//}

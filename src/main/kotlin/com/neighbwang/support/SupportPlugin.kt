@@ -1,4 +1,4 @@
-package io.neighbwang.support
+package com.neighbwang.support
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project

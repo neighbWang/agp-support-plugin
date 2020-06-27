@@ -23,7 +23,7 @@ If your project has multi-modules, please apply this plugin in the root `build.g
 Please apply this  plugin at the first line of root buildScript file.
 
 ```groovy
-apply plugin: 'io.neighbwang.agp-support'
+apply plugin: 'com.neighbwang.agp-support'
 buildscript {
     ext.agp_support_version = '1.0.0'
     repositories {
@@ -33,7 +33,7 @@ buildscript {
         maven { url 'https://oss.sonatype.org/content/repositories/public' }
     }
     dependencies {
-        classpath "io.neighbwang.gradle:agp-support-plugin:$agp_support_version" 
+        classpath "com.neighbwang.gradle:agp-support-plugin:$agp_support_version" 
     }
 }
 

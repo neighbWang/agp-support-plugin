@@ -3,6 +3,7 @@ package io.neighbwang.support
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.TestedExtension
+import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.variant.VariantFactory
 import org.gradle.api.Project
 import java.lang.reflect.Proxy
@@ -21,50 +22,46 @@ internal val Project.buildType
         }
     }
 
-fun Project.filterFlavors(buildtype: String?) = variantManager?.let { variantManager ->
-    startCommand.toLowerCase().let {
-        Pattern.compile("(assemble|install|generate)(\\w+)$buildtype").matcher(it)
-    }.takeIf {
-        it.find()
-    }?.group(2)?.letCatching { flavor ->
-        variantManager.productFlavors.filter {
-            it.key.contains(flavor, true)
-        }.takeIf {
-            it.isNotEmpty()
-        }?.let { result ->
-            variantManager.javaClass.getDeclaredField("productFlavors").apply {
-                isAccessible = true
-                this[variantManager] = result
-            }
-        }
-    }
-}
-
-internal fun Project.filterBuildTypes(buildtype: String?) = variantManager?.let { variantManager ->
-    variantManager.buildTypes.filter {
-        it.key == buildtype
+fun Project.filterFlavors(variantManager: VariantManager, buildtype: String?) = startCommand.toLowerCase().let {
+    Pattern.compile("(assemble|install|generate)(\\w+)$buildtype").matcher(it)
+}.takeIf {
+    it.find()
+}?.group(2)?.letCatching { flavor ->
+    variantManager.productFlavors.filter {
+        it.key.contains(flavor, true)
     }.takeIf {
         it.isNotEmpty()
-    }?.letCatching {
-        variantManager.javaClass.run {
-            getDeclaredField("buildTypes").apply {
-                isAccessible = true
-                this[variantManager] = it
-            }
-            // fix hook logic here
-            getDeclaredField("extension").apply {
-                isAccessible = true
-                this[variantManager].takeIf {
-                    it is TestedExtension
-                }?.let { extension ->
-                    (extension as TestedExtension).testBuildType = buildtype
-                }
+    }?.let { result ->
+        variantManager.javaClass.getDeclaredField("productFlavors").apply {
+            isAccessible = true
+            this[variantManager] = result
+        }
+    }
+}
+
+internal fun Project.filterBuildTypes(variantManager: VariantManager, buildtype: String?) = variantManager.buildTypes.filter {
+    it.key == buildtype
+}.takeIf {
+    it.isNotEmpty()
+}?.letCatching {
+    variantManager.javaClass.run {
+        getDeclaredField("buildTypes").apply {
+            isAccessible = true
+            this[variantManager] = it
+        }
+        // fix hook logic here
+        getDeclaredField("extension").apply {
+            isAccessible = true
+            this[variantManager].takeIf {
+                it is TestedExtension
+            }?.let { extension ->
+                (extension as TestedExtension).testBuildType = buildtype
             }
         }
     }
 }
 
-internal fun Project.filterTestScopes() = variantManager?.letCatching { variantManager ->
+internal fun Project.filterTestScopes(variantManager: VariantManager) = letCatching {
     variantManager.javaClass.run {
         // Proxy variantFactory to remove test-releative tasks
         getDeclaredField("variantFactory").also {

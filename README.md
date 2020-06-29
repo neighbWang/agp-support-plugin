@@ -10,6 +10,16 @@ This project is used for build optimization of Android Gradle Plugin(AGP). It is
 
 Optimization for configuration 
 
+Three options are provided to control this function,These options are default false:
+```groovy
+// filter unused buildTypes
+gradle.support.filter.buildtype.enable = true
+// filter unused flavors
+gradle.support.filter.flavors.enable = true
+//filter unused testScopes
+gradle.support.filter.tests.enable = true
+```
+
 ### 怎么使用 | How to apply this plugin?
 
 如果是单仓多module的工程结构，请将插件引入到多工程根目录的`build.gradle`/`build.gradle.kts`文件下。如果根目录中包含`AGP`相关插件，请务必在相应插件前面引入我们的插件。
@@ -39,6 +49,7 @@ buildscript {
 
 allprojects {
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
         jcenter()
@@ -46,4 +57,5 @@ allprojects {
     }
 }
 ```
+
 

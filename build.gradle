@@ -55,14 +55,14 @@ test {
     }
 }
 
-nexusPublishing {
-    repositories {
-        sonatype {
-            username = OSSRH_USERNAME
-            password = OSSRH_PASSWORD
-        }
-    }
-}
+//nexusPublishing {
+//    repositories {
+//        sonatype {
+//            username = OSSRH_USERNAME
+//            password = OSSRH_PASSWORD
+//        }
+//    }
+//}
 
 publishing {
     publications {

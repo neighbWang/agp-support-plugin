@@ -1,2 +1,5 @@
 rootProject.name = 'agp-support-plugin'
 
+include ':core'
+include ':bugfix-native-libs-missing'
+

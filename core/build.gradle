@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+group 'com.neighbwang.gradle'
+version '1.0.1'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    api gradleApi()
+    api 'org.ow2.asm:asm:7.1'
+    api 'org.ow2.asm:asm-analysis:7.1'
+    api 'org.ow2.asm:asm-commons:7.1'
+    api 'org.ow2.asm:asm-tree:7.1'
+    api 'org.ow2.asm:asm-util:7.1'
+    api 'com.google.auto.service:auto-service:1.0-rc6'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+test {
+    useJUnitPlatform()
+}
